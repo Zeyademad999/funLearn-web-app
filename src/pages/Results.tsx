@@ -1,10 +1,27 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Trophy, Star, Sparkles } from "lucide-react";
 import lumaMascot from "@/assets/luma-mascot.png";
 
 const Results = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const topic = searchParams.get("topic") || "reading";
+  const score = searchParams.get("score") || "5";
+  
+  const topicNames: Record<string, string> = {
+    reading: "Reading",
+    math: "Math",
+    culture: "Culture",
+    geography: "Geography"
+  };
+
+  const topicEmojis: Record<string, string> = {
+    reading: "📚",
+    math: "🔢",
+    culture: "🌍",
+    geography: "🗺️"
+  };
 
   return (
     <div className="min-h-screen bg-gradient-warm p-6 flex items-center justify-center relative overflow-hidden">
@@ -36,7 +53,7 @@ const Results = () => {
               Great Job, Sadra! 🎉
             </h1>
             <p className="text-2xl font-bold text-muted-foreground">
-              You're becoming a culture expert!
+              You completed all {score} {topicNames[topic]} questions!
             </p>
           </div>
 
@@ -47,7 +64,7 @@ const Results = () => {
             </div>
             <div className="bg-accent/20 rounded-xl px-6 py-3 border-2 border-accent/50">
               <p className="text-xl font-black text-accent">New Badge Unlocked!</p>
-              <p className="text-lg font-semibold">🌍 Culture Explorer</p>
+              <p className="text-lg font-semibold">{topicEmojis[topic]} {topicNames[topic]} Master</p>
             </div>
           </div>
 
@@ -64,7 +81,7 @@ const Results = () => {
               variant="playful"
               size="lg"
               className="w-full"
-              onClick={() => navigate("/lesson")}
+              onClick={() => navigate(`/lesson?topic=${topic}`)}
             >
               <Sparkles className="w-5 h-5" />
               Next Lesson

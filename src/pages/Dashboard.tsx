@@ -56,13 +56,34 @@ const Dashboard = () => {
           <div className="bg-card rounded-2xl p-8 shadow-playful border-4 border-primary/20">
             <h2 className="text-2xl font-black text-foreground mb-6">Choose Your Adventure</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 place-items-center">
-              {lessons.map((lesson) => (
-                <LessonBubble
-                  key={lesson.title}
-                  {...lesson}
-                  onClick={() => navigate("/lesson")}
-                />
-              ))}
+              <LessonBubble
+                title="Reading"
+                icon={BookOpen}
+                color="reading"
+                progress={45}
+                onClick={() => navigate("/lesson?topic=reading")}
+              />
+              <LessonBubble
+                title="Math"
+                icon={Calculator}
+                color="math"
+                progress={30}
+                onClick={() => navigate("/lesson?topic=math")}
+              />
+              <LessonBubble
+                title="Culture"
+                icon={Globe}
+                color="culture"
+                progress={60}
+                onClick={() => navigate("/lesson?topic=culture")}
+              />
+              <LessonBubble
+                title="Geography"
+                icon={Map}
+                color="geography"
+                progress={15}
+                onClick={() => navigate("/lesson?topic=geography")}
+              />
             </div>
           </div>
 

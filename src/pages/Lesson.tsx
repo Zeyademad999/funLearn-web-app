@@ -1,32 +1,64 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ProgressBar";
 import { Lightbulb, RotateCcw, Volume2 } from "lucide-react";
 import lumaMascot from "@/assets/luma-mascot.png";
+import { questionsByTopic, TopicType } from "@/data/questions";
 
 const Lesson = () => {
   const navigate = useNavigate();
-  const [progress, setProgress] = useState(25);
+  const [searchParams] = useSearchParams();
+  const topic = (searchParams.get("topic") || "reading") as TopicType;
+  
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [showHint, setShowHint] = useState(false);
 
-  const question = {
-    text: "Which country's flag is this? 🇯🇵",
-    options: ["China", "Japan", "South Korea", "Thailand"],
-    correct: 1,
+  const questions = questionsByTopic[topic] || questionsByTopic.reading;
+  const question = questions[currentQuestionIndex];
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+
+  const topicColors: Record<TopicType, string> = {
+    reading: "bg-reading",
+    math: "bg-math",
+    culture: "bg-culture",
+    geography: "bg-geography"
+  };
+
+  const topicNames: Record<TopicType, string> = {
+    reading: "Reading",
+    math: "Math",
+    culture: "Culture",
+    geography: "Geography"
   };
 
   const handleAnswer = (index: number) => {
     setSelectedAnswer(index);
     if (index === question.correct) {
       setTimeout(() => {
-        navigate("/results");
+        if (currentQuestionIndex + 1 >= questions.length) {
+          navigate(`/results?topic=${topic}&score=${questions.length}`);
+        } else {
+          setCurrentQuestionIndex(prev => prev + 1);
+          setSelectedAnswer(null);
+          setShowHint(false);
+        }
       }, 1000);
     }
   };
 
+  const handleRetry = () => {
+    setSelectedAnswer(null);
+    setShowHint(false);
+  };
+
+  const handleHint = () => {
+    setShowHint(true);
+  };
+
   return (
-    <div className="min-h-screen bg-culture p-6">
+    <div className={`min-h-screen ${topicColors[topic]} p-6 transition-colors duration-500`}>
       <div className="max-w-4xl mx-auto">
         {/* Progress header */}
         <div className="mb-6">
@@ -55,9 +87,17 @@ const Lesson = () => {
               alt="Luma"
               className="w-20 h-auto animate-bounce-gentle"
             />
-            <p className="text-lg font-bold text-foreground">
-              "Look carefully at the flag! Think about what you've learned about different countries."
-            </p>
+            <div>
+              <p className="text-sm font-semibold text-muted-foreground mb-1">
+                {topicNames[topic]} - Question {currentQuestionIndex + 1} of {questions.length}
+              </p>
+              <p className="text-lg font-bold text-foreground">
+                {showHint 
+                  ? `💡 The correct answer is option ${question.correct + 1}!`
+                  : "Take your time and think carefully! You've got this! 🌟"
+                }
+              </p>
+            </div>
           </div>
         </div>
 
@@ -67,10 +107,12 @@ const Lesson = () => {
             {question.text}
           </h2>
 
-          {/* Flag display */}
-          <div className="text-9xl text-center mb-8 animate-scale-in">
-            🇯🇵
-          </div>
+          {/* Emoji display */}
+          {question.emoji && (
+            <div className="text-9xl text-center mb-8 animate-scale-in">
+              {question.emoji}
+            </div>
+          )}
 
           {/* Answer options */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -99,11 +141,21 @@ const Lesson = () => {
 
         {/* Helper buttons */}
         <div className="flex gap-4 justify-center">
-          <Button variant="outline" size="lg">
+          <Button 
+            variant="outline" 
+            size="lg"
+            onClick={handleHint}
+            disabled={showHint || selectedAnswer !== null}
+          >
             <Lightbulb className="w-5 h-5" />
             Hint
           </Button>
-          <Button variant="outline" size="lg">
+          <Button 
+            variant="outline" 
+            size="lg"
+            onClick={handleRetry}
+            disabled={selectedAnswer === null || selectedAnswer === question.correct}
+          >
             <RotateCcw className="w-5 h-5" />
             Retry
           </Button>
