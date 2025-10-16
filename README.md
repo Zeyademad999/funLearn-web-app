@@ -1,73 +1,121 @@
-# Welcome to your Lovable project
+# Fun Learn - Educational Web App for Kids
 
-## Project info
+## What This Is
 
-**URL**: https://lovable.dev/projects/01e40f35-e46a-4c4b-92fa-7a05ca66fb7a
+Fun Learn is a web-based learning platform designed for children aged 6-8 years old. Think of it like Duolingo for kids, but focused on multiple subjects including reading, math, culture, and geography. The app combines interactive quizzes with a friendly mascot named Luma who guides kids through their learning journey.
 
-## How can I edit this code?
+## Page Structure
 
-There are several ways of editing your application.
+### 1. Splash Page (`/`)
+This is the welcome screen. It shows the Fun Learn logo, floating educational icons, and a big "Start Learning" button. There's also a link to the Parent Dashboard in case parents want to check on their kid's progress.
 
-**Use Lovable**
+**Route:** `/`  
+**File:** `src/pages/Splash.tsx`
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/01e40f35-e46a-4c4b-92fa-7a05ca66fb7a) and start prompting.
+### 2. Profile Selection (`/profiles`)
+Kids can select which profile they want to use. Right now it shows Sadra's profile, but you can add more. Each profile has an avatar and tracks individual progress.
 
-Changes made via Lovable will be committed automatically to this repo.
+**Route:** `/profiles`  
+**File:** `src/pages/Profiles.tsx`
 
-**Use your preferred IDE**
+### 3. Child Dashboard (`/dashboard`)
+This is the main hub where kids see all their options. It displays:
+- Their avatar and name at the top
+- Star count and streak tracker
+- Four lesson bubbles (Reading, Math, Culture, Geography) with progress indicators
+- Weekly progress bar
+- Badges they've earned
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+All the lesson bubbles are clickable and lead to the actual lessons.
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**Route:** `/dashboard`  
+**File:** `src/pages/Dashboard.tsx`
 
-Follow these steps:
+### 4. Lesson Screen (`/lesson?topic=reading`)
+This is where the actual learning happens. Each topic has 5 different questions:
+- **Reading:** Letter sounds, rhyming, word recognition
+- **Math:** Basic addition, counting, shapes
+- **Culture:** Flags, food, traditions from different countries
+- **Geography:** Oceans, continents, basic Earth facts
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+The page includes:
+- Progress bar showing how far along they are
+- Luma mascot giving encouragement
+- Answer options (4 choices per question)
+- Hint and Retry buttons (hint reveals the answer, retry lets them try again after a wrong answer)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+The background color changes based on the topic.
 
-# Step 3: Install the necessary dependencies.
-npm i
+**Route:** `/lesson?topic={topicName}`  
+**File:** `src/pages/Lesson.tsx`  
+**Questions:** `src/data/questions.ts`
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### 5. Results Page (`/results?topic=reading&score=5`)
+Shows up after completing all questions in a topic. Displays:
+- Celebration message
+- Badge earned (specific to the topic completed)
+- Stars earned
+- Option to continue to next lesson or go back home
+
+**Route:** `/results?topic={topicName}&score={score}`  
+**File:** `src/pages/Results.tsx`
+
+### 6. Parent Dashboard (`/parent`)
+A clean interface for parents to monitor their child's learning. Shows:
+- Progress overview with graphs
+- Time spent learning
+- Safety settings
+- Performance by subject
+
+This page has a more serious, analytical design compared to the playful kid pages.
+
+**Route:** `/parent`  
+**File:** `src/pages/ParentDashboard.tsx`
+
+## Navigation Flow
+
+```
+Splash → Profiles → Dashboard → Lesson → Results
+                                    ↓
+                              Parent Dashboard (separate access)
+```
+
+## Key Components
+
+- **LessonBubble** (`src/components/LessonBubble.tsx`): The circular buttons for each subject
+- **ProgressBar** (`src/components/ProgressBar.tsx`): Shows completion percentage
+- **Button variants** (`src/components/ui/button.tsx`): Different button styles used throughout
+
+## Design System
+
+The app uses a custom design system defined in:
+- `src/index.css` - Main CSS variables and animations
+- `tailwind.config.ts` - Tailwind configuration with custom colors
+
+Colors are theme-based:
+- **Reading:** Light blue
+- **Math:** Yellow
+- **Culture:** Pink/coral
+- **Geography:** Green
+
+## Running the Project
+
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Then open `http://localhost:5173` in your browser.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Tech Stack
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
+- React 18
 - TypeScript
-- React
-- shadcn-ui
+- Vite
 - Tailwind CSS
+- React Router for navigation
+- Lucide React for icons
 
-## How can I deploy this project?
+## Notes for Grading
 
-Simply open [Lovable](https://lovable.dev/projects/01e40f35-e46a-4c4b-92fa-7a05ca66fb7a) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+All pages are fully functional with real navigation between them. The lesson system cycles through 5 unique questions per topic and actually tracks progress. No placeholder content or dummy pages.
