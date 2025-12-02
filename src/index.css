@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Fun Learn Color Palette - Pastel & Playful */
+    --background: 0 0% 100%;
+    --foreground: 220 15% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 20%;
+
+    /* Pastel Blue - Primary */
+    --primary: 200 100% 85%;
+    --primary-foreground: 220 40% 25%;
+
+    /* Mint Green - Secondary */
+    --secondary: 130 60% 88%;
+    --secondary-foreground: 145 50% 25%;
+
+    /* Warm Yellow */
+    --muted: 48 100% 88%;
+    --muted-foreground: 45 50% 30%;
+
+    /* Coral Accent */
+    --accent: 15 100% 70%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 200 30% 90%;
+    --input: 200 30% 90%;
+    --ring: 200 100% 70%;
+
+    --radius: 1rem;
+
+    /* Custom Fun Learn tokens */
+    --reading-bg: 200 100% 95%;
+    --math-bg: 48 100% 95%;
+    --culture-bg: 340 100% 95%;
+    --geography-bg: 130 60% 95%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(200 100% 85%) 0%, hsl(180 80% 80%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(130 60% 88%) 0%, hsl(200 100% 85%) 100%);
+    --gradient-warm: linear-gradient(135deg, hsl(48 100% 88%) 0%, hsl(15 100% 80%) 100%);
+    
+    --shadow-soft: 0 4px 24px -2px hsl(200 50% 50% / 0.12);
+    --shadow-playful: 0 8px 32px -4px hsl(200 50% 50% / 0.18);
+    --shadow-glow: 0 0 32px hsl(200 100% 70% / 0.3);
+    
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}

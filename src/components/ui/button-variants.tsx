@@ -1,0 +1,29 @@
+import { cva } from "class-variance-authority";
+
+export const buttonVariants = cva(
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-base font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:scale-105 active:scale-95 shadow-soft",
+        playful: "bg-gradient-warm text-foreground hover:shadow-playful hover:scale-105 active:scale-95 shadow-soft",
+        success: "bg-secondary text-secondary-foreground hover:shadow-playful hover:scale-105 active:scale-95 shadow-soft",
+        accent: "bg-accent text-accent-foreground hover:shadow-glow hover:scale-105 active:scale-95 shadow-soft",
+        outline: "border-2 border-primary bg-background hover:bg-primary/10 hover:scale-105 active:scale-95",
+        ghost: "hover:bg-primary/10 hover:text-primary",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        default: "h-12 px-6 py-3",
+        sm: "h-10 px-4 py-2 text-sm rounded-lg",
+        lg: "h-14 px-8 py-4 text-lg rounded-2xl",
+        xl: "h-16 px-10 py-5 text-xl rounded-2xl",
+        icon: "h-12 w-12",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+      size: "default",
+    },
+  }
+);
