@@ -21,7 +21,7 @@ npm install
 npm run dev
 ```
 
-The app will be available at `http://localhost:8080`
+The app will be available at `http://localhost:8080 or the available port, (check terminal) `
 
 ### Build for Production
 
