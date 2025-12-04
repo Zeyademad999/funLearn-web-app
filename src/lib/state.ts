@@ -247,6 +247,16 @@ export function setCurrentProfile(profileId: string): void {
   });
 }
 
+export function updateProfileName(profileId: string, newName: string): void {
+  updateState((state) => {
+    const profile = state.profiles.find((p) => p.id === profileId);
+    if (profile) {
+      profile.name = newName.trim();
+    }
+    return state;
+  });
+}
+
 export function getChildProgress(profileId: string): ChildProgress | null {
   const state = loadState();
   return state.children[profileId] || null;

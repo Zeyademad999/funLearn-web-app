@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Learn from "./pages/Learn";
 import Lesson from "./pages/Lesson";
 import Results from "./pages/Results";
+import Flashcards from "./pages/Flashcards";
 import ParentDashboard from "./pages/ParentDashboard";
 import ParentLogin from "./pages/ParentLogin";
 import NotFound from "./pages/NotFound";
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/learn" element={<Learn />} />
           <Route path="/lesson" element={<Lesson />} />
           <Route path="/results" element={<Results />} />
+          <Route path="/flashcards" element={<Flashcards />} />
           <Route path="/parent/login" element={<ParentLogin />} />
           <Route path="/parent" element={<ParentDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

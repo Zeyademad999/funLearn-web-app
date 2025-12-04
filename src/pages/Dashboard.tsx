@@ -10,14 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { BookOpen, Calculator, Globe, Map, Award, Flame, Star, Lock } from "lucide-react";
+import { BookOpen, Calculator, Globe, Map, Award, Flame, Star, Lock, FileText } from "lucide-react";
 import avatarSadra from "@/assets/avatar-sadra.png";
 import lumaMascot from "@/assets/luma-mascot.png";
 import {
   getCurrentProfile,
   getChildProgress,
   getTopicProgress,
-  BADGE_DEFINITIONS,
   type TopicType,
   type Badge,
 } from "@/lib/state";
@@ -55,10 +54,6 @@ const Dashboard = () => {
 
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [showBadgeDialog, setShowBadgeDialog] = useState(false);
-
-  // Get all badges (earned and available)
-  const allBadges = Object.values(BADGE_DEFINITIONS);
-  const earnedBadgeIds = new Set(progress.badges.map((b) => b.id));
 
   return (
     <div className="min-h-screen bg-gradient-primary p-6">
@@ -114,6 +109,43 @@ const Dashboard = () => {
                       }
                     }}
                   />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Flashcards Section */}
+          <div className="bg-card rounded-2xl p-8 shadow-playful border-4 border-primary/20">
+            <h2 className="text-2xl font-black text-foreground mb-6 flex items-center gap-3">
+              <FileText className="w-6 h-6 text-accent" />
+              Review with Flashcards
+            </h2>
+            <p className="text-muted-foreground mb-4">
+              Practice what you've learned with interactive flashcards!
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {lessons.map((lesson) => {
+                const isAllowed = progress.safetySettings.allowedTopics.includes(lesson.topic);
+                return (
+                  <Button
+                    key={`flashcard-${lesson.topic}`}
+                    variant="outline"
+                    disabled={!isAllowed}
+                    onClick={() => {
+                      if (isAllowed) {
+                        navigate(`/flashcards?topic=${lesson.topic}`);
+                      }
+                    }}
+                    className={`h-20 flex flex-col items-center justify-center gap-2 ${
+                      isAllowed
+                        ? "hover:bg-accent/20 hover:scale-105 transition-all"
+                        : "opacity-50 cursor-not-allowed"
+                    }`}
+                  >
+                    <lesson.icon className={`w-6 h-6 ${isAllowed ? "" : "opacity-50"}`} />
+                    <span className="text-sm font-semibold">{lesson.title}</span>
+                    {!isAllowed && <Lock className="w-4 h-4 absolute top-2 right-2" />}
+                  </Button>
                 );
               })}
             </div>
@@ -177,34 +209,6 @@ const Dashboard = () => {
                 <p className="text-sm text-muted-foreground">Complete lessons to earn badges!</p>
               )}
             </div>
-            
-            {/* Show locked badges preview */}
-            {allBadges.length > progress.badges.length && (
-              <div className="mt-4 pt-4 border-t border-border">
-                <p className="text-xs text-muted-foreground mb-2">
-                  {allBadges.length - progress.badges.length} more badges to unlock!
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  {allBadges
-                    .filter((badge) => !earnedBadgeIds.has(badge.id))
-                    .slice(0, 3)
-                    .map((badge) => (
-                      <div
-                        key={badge.id}
-                        className="w-12 h-12 bg-muted/30 rounded-lg flex items-center justify-center text-2xl opacity-50 border border-border"
-                        title={`Locked: ${badge.name}`}
-                      >
-                        {badge.emoji}
-                      </div>
-                    ))}
-                  {allBadges.filter((badge) => !earnedBadgeIds.has(badge.id)).length > 3 && (
-                    <div className="w-12 h-12 bg-muted/30 rounded-lg flex items-center justify-center text-sm font-bold text-muted-foreground border border-border">
-                      +{allBadges.filter((badge) => !earnedBadgeIds.has(badge.id)).length - 3}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Badge Detail Dialog */}

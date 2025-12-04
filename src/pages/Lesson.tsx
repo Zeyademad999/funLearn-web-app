@@ -150,11 +150,6 @@ const Lesson = () => {
       sessionIndexRef.current = progressData.sessions.length - 1;
     }
 
-    // Wait a bit for voices to load, then narrate first question
-    setTimeout(() => {
-      speak(question.text);
-    }, 300);
-
     // Cleanup on unmount
     return () => {
       stopNarration();
@@ -165,17 +160,7 @@ const Lesson = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
-  // Narrate new question when it changes
-  useEffect(() => {
-    if (currentQuestionIndex > 0) {
-      stopNarration();
-      // Small delay for smooth transition
-      setTimeout(() => {
-        speak(question.text);
-      }, 500);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentQuestionIndex]);
+  // Note: Auto-narration removed - users must click voice button to hear narration
 
   // Check session time limit periodically
   useEffect(() => {
@@ -376,7 +361,6 @@ const Lesson = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-    
   );
 };
 

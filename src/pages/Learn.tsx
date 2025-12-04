@@ -137,25 +137,12 @@ const Learn = () => {
       sessionIndexRef.current = progressData.sessions.length - 1;
     }
 
-    // Narrate first slide
-    setTimeout(() => {
-      speak(currentSlide.content);
-    }, 300);
-
     return () => {
       stopNarration();
     };
   }, []);
 
-  // Narrate when slide changes
-  useEffect(() => {
-    if (currentSlideIndex > 0) {
-      stopNarration();
-      setTimeout(() => {
-        speak(currentSlide.content);
-      }, 500);
-    }
-  }, [currentSlideIndex]);
+  // Note: Auto-narration removed - users must click voice button to hear narration
 
   const handleNext = () => {
     if (currentSlideIndex < lesson.slides.length - 1) {

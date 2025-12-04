@@ -23,7 +23,9 @@ import {
   Calculator,
   Globe,
   Map,
-  Settings
+  Settings,
+  LogOut,
+  Edit2
 } from "lucide-react";
 import avatarSadra from "@/assets/avatar-sadra.png";
 import {
@@ -33,7 +35,10 @@ import {
   updateSafetySettings,
   getTimePerTopic,
   generateFeedbackSummary,
+  updateProfileName,
+  BADGE_DEFINITIONS,
   type TopicType,
+  type Badge,
 } from "@/lib/state";
 
 const ParentDashboard = () => {
@@ -51,6 +56,10 @@ const ParentDashboard = () => {
     state.profiles.length > 0 ? state.profiles[0].id : null
   );
   const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
+  const [showBadgeDialog, setShowBadgeDialog] = useState(false);
+  const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [newProfileName, setNewProfileName] = useState("");
   const [settings, setSettings] = useState({
     dailyTimeLimit: 60,
     sessionTimeLimit: 30,
@@ -66,6 +75,14 @@ const ParentDashboard = () => {
       setSelectedProfileId(currentState.profiles[0].id);
     }
   }, []);
+
+  // Refresh state when profile changes
+  useEffect(() => {
+    if (selectedProfileId) {
+      const currentState = loadState();
+      setState(currentState);
+    }
+  }, [selectedProfileId]);
 
   const selectedProgress = selectedProfileId
     ? getChildProgress(selectedProfileId)
@@ -112,7 +129,39 @@ const ParentDashboard = () => {
       updateSafetySettings(selectedProfileId, settings);
       setShowSettingsDialog(false);
       // Refresh state
-      setState(loadState());
+      const updatedState = loadState();
+      setState(updatedState);
+      // Update selected progress
+      if (updatedState.profiles.length > 0 && !selectedProfileId) {
+        setSelectedProfileId(updatedState.profiles[0].id);
+      }
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("parent-authenticated");
+    navigate("/");
+  };
+
+  const handleBadgeClick = (badge: Badge) => {
+    setSelectedBadge(badge);
+    setShowBadgeDialog(true);
+  };
+
+  const handleRenameClick = () => {
+    if (selectedProfile) {
+      setNewProfileName(selectedProfile.name);
+      setShowRenameDialog(true);
+    }
+  };
+
+  const handleSaveRename = () => {
+    if (selectedProfileId && newProfileName.trim()) {
+      updateProfileName(selectedProfileId, newProfileName.trim());
+      setShowRenameDialog(false);
+      // Refresh state
+      const updatedState = loadState();
+      setState(updatedState);
     }
   };
 
@@ -148,11 +197,10 @@ const ParentDashboard = () => {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => {
-                  localStorage.removeItem("parent-authenticated");
-                  navigate("/");
-                }}
+                onClick={handleLogout}
+                className="flex items-center gap-2"
               >
+                <LogOut className="w-4 h-4" />
                 Logout
               </Button>
             </div>
@@ -161,35 +209,72 @@ const ParentDashboard = () => {
 
         {/* Profile selector */}
         {state.profiles.length > 1 && (
-          <div className="mb-6 flex gap-2">
-            {state.profiles.map((profile) => (
-              <Button
-                key={profile.id}
-                variant={selectedProfileId === profile.id ? "default" : "outline"}
-                onClick={() => setSelectedProfileId(profile.id)}
-              >
-                {profile.name}
-              </Button>
-            ))}
+          <div className="mb-6">
+            <Label className="text-sm font-semibold text-muted-foreground mb-2 block">
+              Select Child Profile
+            </Label>
+            <div className="flex gap-2 flex-wrap">
+              {state.profiles.map((profile) => {
+                const profileProgress = getChildProgress(profile.id);
+                return (
+                  <Button
+                    key={profile.id}
+                    variant={selectedProfileId === profile.id ? "default" : "outline"}
+                    onClick={() => {
+                      setSelectedProfileId(profile.id);
+                      // Load child data
+                      const updatedState = loadState();
+                      setState(updatedState);
+                    }}
+                    className="flex items-center gap-2"
+                  >
+                    <img
+                      src={profile.avatar}
+                      alt={profile.name}
+                      className="w-6 h-6 rounded-full"
+                    />
+                    {profile.name}
+                    {profileProgress && (
+                      <span className="text-xs opacity-75">
+                        ({profileProgress.stars} ⭐)
+                      </span>
+                    )}
+                  </Button>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {/* Child profile card */}
         {selectedProfile && selectedProgress && (
           <div className="bg-card rounded-2xl p-6 shadow-soft border border-border mb-8">
-            <div className="flex items-center gap-4">
-              <img
-                src={selectedProfile.avatar}
-                alt={selectedProfile.name}
-                className="w-20 h-20 rounded-full border-4 border-primary"
-              />
-              <div>
-                <h2 className="text-2xl font-bold text-foreground">
-                  {selectedProfile.name}'s Progress
-                </h2>
-                <p className="text-muted-foreground">
-                  Active for {selectedProgress.streak} {selectedProgress.streak === 1 ? 'day' : 'days'} • {selectedProgress.stars} stars earned • {selectedProgress.badges.length} badges
-                </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <img
+                  src={selectedProfile.avatar}
+                  alt={selectedProfile.name}
+                  className="w-20 h-20 rounded-full border-4 border-primary"
+                />
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-2xl font-bold text-foreground">
+                      {selectedProfile.name}'s Progress
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRenameClick}
+                      className="h-8 w-8 p-0"
+                      title="Rename profile"
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <p className="text-muted-foreground">
+                    Active for {selectedProgress.streak} {selectedProgress.streak === 1 ? 'day' : 'days'} • {selectedProgress.stars} stars earned • {selectedProgress.badges.length} badges
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -310,22 +395,43 @@ const ParentDashboard = () => {
 
           <div className="bg-card rounded-2xl p-6 shadow-soft border border-border">
             <h3 className="text-xl font-bold text-foreground mb-4">Recent Activity</h3>
-            <div className="space-y-3 text-sm">
+            <div className="space-y-4">
               {selectedProgress && selectedProgress.badges.length > 0 ? (
-                selectedProgress.badges
-                  .slice(-3)
-                  .reverse()
-                  .map((badge, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <div className="w-2 h-2 bg-primary rounded-full"></div>
-                      <span className="text-muted-foreground">
-                        Earned {badge.emoji} {badge.name} badge
-                      </span>
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        {new Date(badge.unlockedAt).toLocaleDateString()}
-                      </span>
+                <>
+                  <div className="space-y-3 text-sm mb-4">
+                    {selectedProgress.badges
+                      .slice(-3)
+                      .reverse()
+                      .map((badge, i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="w-2 h-2 bg-primary rounded-full"></div>
+                          <span className="text-muted-foreground">
+                            Earned {badge.emoji} {badge.name} badge
+                          </span>
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            {new Date(badge.unlockedAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                  <div className="pt-4 border-t border-border">
+                    <p className="text-sm font-semibold text-foreground mb-3">
+                      Badges Earned ({selectedProgress.badges.length})
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      {selectedProgress.badges.map((badge) => (
+                        <button
+                          key={badge.id}
+                          onClick={() => handleBadgeClick(badge)}
+                          className="w-14 h-14 bg-gradient-to-br from-primary/20 to-accent/20 rounded-xl flex items-center justify-center text-2xl shadow-soft hover:scale-110 hover:shadow-glow transition-all cursor-pointer border-2 border-primary/30 hover:border-primary/60"
+                          title={`${badge.name} - Click to see details!`}
+                        >
+                          {badge.emoji}
+                        </button>
+                      ))}
                     </div>
-                  ))
+                  </div>
+                </>
               ) : (
                 <p className="text-muted-foreground">No recent activity</p>
               )}
@@ -350,42 +456,63 @@ const ParentDashboard = () => {
 
       {/* Settings Dialog */}
       <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Safety Settings</DialogTitle>
+            <DialogTitle className="text-2xl">Adjust Settings</DialogTitle>
             <DialogDescription>
               Configure safety and time limits for {selectedProfile?.name || "your child"}.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="dailyLimit">Daily Time Limit (minutes)</Label>
+              <Label htmlFor="dailyLimit" className="text-base font-semibold">
+                Set Daily Time Limit (minutes)
+              </Label>
               <Input
                 id="dailyLimit"
                 type="number"
                 min="15"
                 max="120"
+                step="5"
                 value={settings.dailyTimeLimit}
                 onChange={(e) =>
                   setSettings({ ...settings, dailyTimeLimit: parseInt(e.target.value) || 60 })
                 }
+                className="text-lg"
               />
+              <p className="text-xs text-muted-foreground">
+                Recommended: 30-60 minutes per day
+              </p>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="sessionLimit">Session Time Limit (minutes)</Label>
+              <Label htmlFor="sessionLimit" className="text-base font-semibold">
+                Set Session Time Limit (minutes)
+              </Label>
               <Input
                 id="sessionLimit"
                 type="number"
                 min="10"
                 max="60"
+                step="5"
                 value={settings.sessionTimeLimit}
                 onChange={(e) =>
                   setSettings({ ...settings, sessionTimeLimit: parseInt(e.target.value) || 30 })
                 }
+                className="text-lg"
               />
+              <p className="text-xs text-muted-foreground">
+                Maximum time per learning session
+              </p>
             </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="contentFilter">Content Filtering</Label>
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <div className="space-y-0.5">
+                <Label htmlFor="contentFilter" className="text-base font-semibold cursor-pointer">
+                  Toggle Content Filtering
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Filter inappropriate content
+                </p>
+              </div>
               <Switch
                 id="contentFilter"
                 checked={settings.contentFilterEnabled}
@@ -394,8 +521,15 @@ const ParentDashboard = () => {
                 }
               />
             </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="ageAppropriate">Age-Appropriate Content</Label>
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <div className="space-y-0.5">
+                <Label htmlFor="ageAppropriate" className="text-base font-semibold cursor-pointer">
+                  Toggle Age-Appropriate Content
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Show only age-appropriate lessons
+                </p>
+              </div>
               <Switch
                 id="ageAppropriate"
                 checked={settings.ageAppropriateEnabled}
@@ -405,10 +539,20 @@ const ParentDashboard = () => {
               />
             </div>
             <div className="grid gap-3 pt-2 border-t border-border">
-              <Label>Allowed Topics</Label>
+              <Label className="text-base font-semibold">Select Allowed Topics</Label>
+              <p className="text-xs text-muted-foreground mb-3">
+                Choose which subjects your child can access
+              </p>
               <div className="grid grid-cols-2 gap-3">
                 {subjects.map((subject) => (
-                  <div key={subject.topic} className="flex items-center space-x-2">
+                  <div 
+                    key={subject.topic} 
+                    className={`flex items-center space-x-3 p-3 rounded-lg border-2 transition-all ${
+                      settings.allowedTopics.includes(subject.topic)
+                        ? "border-primary bg-primary/10"
+                        : "border-border bg-muted/30"
+                    }`}
+                  >
                     <Checkbox
                       id={`topic-${subject.topic}`}
                       checked={settings.allowedTopics.includes(subject.topic)}
@@ -430,8 +574,9 @@ const ParentDashboard = () => {
                     />
                     <Label
                       htmlFor={`topic-${subject.topic}`}
-                      className="text-sm font-normal cursor-pointer"
+                      className="text-sm font-semibold cursor-pointer flex items-center gap-2 flex-1"
                     >
+                      <subject.icon className="w-4 h-4" />
                       {subject.name}
                     </Label>
                   </div>
@@ -439,11 +584,91 @@ const ParentDashboard = () => {
               </div>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowSettingsDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSaveSettings}>Save</Button>
+            <Button onClick={handleSaveSettings} className="min-w-[100px]">
+              Save Settings
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Badge Detail Dialog */}
+      <Dialog open={showBadgeDialog} onOpenChange={setShowBadgeDialog}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl">
+              {selectedBadge?.name}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {selectedBadge?.description}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="w-32 h-32 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full flex items-center justify-center text-6xl shadow-glow">
+              {selectedBadge?.emoji}
+            </div>
+            <div className="text-center space-y-2">
+              <p className="text-sm font-semibold text-muted-foreground capitalize">
+                Category: {selectedBadge?.category}
+              </p>
+              {selectedBadge?.unlockedAt && (
+                <p className="text-xs text-muted-foreground">
+                  Earned on {new Date(selectedBadge.unlockedAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </p>
+              )}
+            </div>
+            <div className="bg-secondary/20 rounded-lg p-4 w-full text-center">
+              <p className="text-sm font-bold text-secondary-foreground">
+                🎉 Great job earning this badge!
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Rename Profile Dialog */}
+      <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Rename Child Profile</DialogTitle>
+            <DialogDescription>
+              Update the name for {selectedProfile?.name || "this profile"}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="profileName">Child's Name</Label>
+              <Input
+                id="profileName"
+                value={newProfileName}
+                onChange={(e) => setNewProfileName(e.target.value)}
+                placeholder="Enter new name"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && newProfileName.trim()) {
+                    handleSaveRename();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRenameDialog(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSaveRename} 
+              disabled={!newProfileName.trim() || newProfileName.trim() === selectedProfile?.name}
+            >
+              Save
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
