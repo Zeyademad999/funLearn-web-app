@@ -1,7 +1,21 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Trophy, Star, Sparkles } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Trophy, Star, Sparkles, Home, HelpCircle } from "lucide-react";
 import lumaMascot from "@/assets/luma-mascot.png";
 import {
   getCurrentProfile,
@@ -63,19 +77,48 @@ const Results = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-warm p-6 flex items-center justify-center relative overflow-hidden">
-      {/* Animated confetti background */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-10 left-10 text-6xl animate-float">⭐</div>
-        <div className="absolute top-20 right-20 text-5xl animate-bounce-gentle">🎉</div>
-        <div className="absolute bottom-20 left-20 text-6xl animate-wiggle">🏆</div>
-        <div className="absolute bottom-10 right-10 text-5xl animate-float">✨</div>
-        <div className="absolute top-1/2 left-1/4 text-4xl animate-bounce-gentle">🌟</div>
-        <div className="absolute top-1/3 right-1/4 text-5xl animate-float">🎊</div>
-      </div>
+    <TooltipProvider>
+      <div className="min-h-screen bg-gradient-warm p-6 flex items-center justify-center relative overflow-hidden">
+        {/* Animated confetti background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-10 left-10 text-6xl animate-float">⭐</div>
+          <div className="absolute top-20 right-20 text-5xl animate-bounce-gentle">🎉</div>
+          <div className="absolute bottom-20 left-20 text-6xl animate-wiggle">🏆</div>
+          <div className="absolute bottom-10 right-10 text-5xl animate-float">✨</div>
+          <div className="absolute top-1/2 left-1/4 text-4xl animate-bounce-gentle">🌟</div>
+          <div className="absolute top-1/3 right-1/4 text-5xl animate-float">🎊</div>
+        </div>
 
-      {/* Main content */}
-      <div className="max-w-2xl w-full relative z-10 animate-scale-in">
+        {/* Breadcrumb Navigation - Nielsen #1: Visibility of system status */}
+        <div className="absolute top-6 left-6 right-6 max-w-2xl mx-auto z-20">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:text-primary">
+                    <Home className="w-4 h-4" />
+                    Home
+                  </button>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink asChild>
+                  <button onClick={() => navigate("/dashboard")} className="hover:text-primary">
+                    Dashboard
+                  </button>
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Results</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+        </div>
+
+        {/* Main content */}
+        <div className="max-w-2xl w-full relative z-10 animate-scale-in">
         {/* Luma celebration */}
         <div className="text-center mb-8">
           <img
@@ -116,29 +159,43 @@ const Results = () => {
             <Star className="w-10 h-10 fill-muted text-muted animate-wiggle" />
           </div>
 
-          {/* Action buttons */}
+          {/* Action buttons - Gestalt Similarity: Consistent button styling */}
           <div className="space-y-3 pt-4">
-            <Button
-              variant="playful"
-              size="lg"
-              className="w-full"
-              onClick={() => navigate(`/lesson?topic=${topic}`)}
-            >
-              <Sparkles className="w-5 h-5" />
-              Next Lesson
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full"
-              onClick={() => navigate("/dashboard")}
-            >
-              Back to Home
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="playful"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => navigate(`/lesson?topic=${topic}`)}
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Next Lesson
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Continue with another {topicNames[topic]} lesson</p>
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  Back to Dashboard
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Return to your dashboard to choose another subject</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
-        {/* Encouraging message from Luma */}
+        {/* Encouraging message from Luma - Gestalt Proximity: Group message */}
         <div className="mt-6 bg-secondary/80 rounded-2xl p-6 shadow-soft text-center backdrop-blur-sm">
           <p className="text-lg font-bold text-secondary-foreground">
             💬 "You're doing amazing! Keep exploring and learning new things!"
@@ -146,6 +203,7 @@ const Results = () => {
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 };
 

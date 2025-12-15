@@ -2,7 +2,31 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ProgressBar";
-import { ArrowRight, ArrowLeft, Volume2, VolumeX, Play } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowRight, ArrowLeft, Volume2, VolumeX, Play, Home, HelpCircle } from "lucide-react";
 import lumaMascot from "@/assets/luma-mascot.png";
 import { lessonsByTopic, type TopicType } from "@/data/lessons";
 import {
@@ -19,6 +43,7 @@ const Learn = () => {
   
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [isNarrating, setIsNarrating] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
   const sessionIndexRef = useRef<number>(-1);
   const profile = getCurrentProfile();
 
@@ -160,47 +185,89 @@ const Learn = () => {
   };
 
   return (
-    <div
-      className={`min-h-screen ${topicColors[topic]} p-6 transition-colors duration-500`}
-    >
-      <div className="max-w-4xl mx-auto">
-        {/* Progress header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/dashboard")}
-            >
-              ← Back
-            </Button>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  if (isNarrating) {
-                    stopNarration();
-                  } else {
-                    speak(currentSlide.content);
-                  }
-                }}
-                className="w-10 h-10 rounded-full bg-card hover:bg-card/80 flex items-center justify-center shadow-soft transition-all hover:scale-110"
-                title={isNarrating ? "Stop narration" : "Read aloud"}
-              >
-                {isNarrating ? (
-                  <VolumeX className="w-5 h-5 text-foreground" />
-                ) : (
-                  <Volume2 className="w-5 h-5 text-foreground" />
-                )}
-              </button>
-            </div>
+    <TooltipProvider>
+      <div
+        className={`min-h-screen ${topicColors[topic]} p-6 transition-colors duration-500`}
+      >
+        <div className="max-w-4xl mx-auto">
+          {/* Breadcrumb Navigation - Nielsen #1: Visibility of system status */}
+          <div className="mb-4">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:text-primary">
+                      <Home className="w-4 h-4" />
+                      Home
+                    </button>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <button onClick={() => setShowExitDialog(true)} className="hover:text-primary">
+                      Dashboard
+                    </button>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{topicNames[topic]} - Learning</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-          <ProgressBar value={progress} showLabel />
-          <p className="text-sm text-center text-foreground/70 mt-2">
-            Slide {currentSlideIndex + 1} of {lesson.slides.length}
-          </p>
-        </div>
 
-        {/* Luma helper */}
+          {/* Progress header - Nielsen #1: Visibility of system status */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowExitDialog(true)}
+                  >
+                    ← Back
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Return to dashboard (your progress will be saved)</p>
+                </TooltipContent>
+              </Tooltip>
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        if (isNarrating) {
+                          stopNarration();
+                        } else {
+                          speak(currentSlide.content);
+                        }
+                      }}
+                      className="w-10 h-10 rounded-full bg-card hover:bg-card/80 flex items-center justify-center shadow-soft transition-all hover:scale-110"
+                    >
+                      {isNarrating ? (
+                        <VolumeX className="w-5 h-5 text-foreground" />
+                      ) : (
+                        <Volume2 className="w-5 h-5 text-foreground" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isNarrating ? "Stop narration" : "Click to hear this slide read aloud"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+            <ProgressBar value={progress} showLabel />
+            <p className="text-sm text-center text-foreground/70 mt-2">
+              Slide {currentSlideIndex + 1} of {lesson.slides.length}
+            </p>
+          </div>
+
+        {/* Luma helper - Gestalt Proximity: Group helper message with mascot */}
         <div className="mb-8 animate-scale-in">
           <div className="bg-card rounded-2xl p-6 shadow-playful border-4 border-accent/30 flex items-center gap-4">
             <img
@@ -208,7 +275,7 @@ const Learn = () => {
               alt="Luma"
               className="w-20 h-auto animate-bounce-gentle"
             />
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-semibold text-muted-foreground mb-1">
                 {topicNames[topic]} - Learning Time! 📖
               </p>
@@ -220,6 +287,14 @@ const Learn = () => {
                   : "Listen carefully and learn! 🎓"}
               </p>
             </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-5 h-5 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>Read through all slides, then take the quiz to test your knowledge!</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
@@ -261,42 +336,82 @@ const Learn = () => {
           </div>
         </div>
 
-        {/* Navigation buttons */}
+        {/* Navigation buttons - Gestalt Similarity: Consistent button styling */}
         <div className="flex gap-4 justify-center items-center">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handlePrevious}
-            disabled={currentSlideIndex === 0}
-          >
-            <ArrowLeft className="w-5 h-5 mr-2" />
-            Previous
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handlePrevious}
+                disabled={currentSlideIndex === 0}
+              >
+                <ArrowLeft className="w-5 h-5 mr-2" />
+                Previous
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Go back to the previous slide</p>
+            </TooltipContent>
+          </Tooltip>
 
           {currentSlideIndex < lesson.slides.length - 1 ? (
-            <Button
-              variant="playful"
-              size="lg"
-              onClick={handleNext}
-              className="min-w-[200px]"
-            >
-              Next
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="playful"
+                  size="lg"
+                  onClick={handleNext}
+                  className="min-w-[200px]"
+                >
+                  Next
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Continue to the next slide</p>
+              </TooltipContent>
+            </Tooltip>
           ) : (
-            <Button
-              variant="playful"
-              size="lg"
-              onClick={handleNext}
-              className="min-w-[200px]"
-            >
-              <Play className="w-5 h-5 mr-2" />
-              Start Quiz!
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="playful"
+                  size="lg"
+                  onClick={handleNext}
+                  className="min-w-[200px]"
+                >
+                  <Play className="w-5 h-5 mr-2" />
+                  Start Quiz!
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Complete all slides? Time to test your knowledge!</p>
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
       </div>
+
+      {/* Exit Confirmation Dialog - Nielsen #3: User control and freedom */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave Learning Session?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your progress will be saved. You can continue from where you left off later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continue Learning</AlertDialogCancel>
+            <AlertDialogAction onClick={() => navigate("/dashboard")}>
+              Return to Dashboard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+    </TooltipProvider>
   );
 };
 

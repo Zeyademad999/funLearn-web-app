@@ -5,13 +5,28 @@ import { ProgressBar } from "@/components/ProgressBar";
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Lightbulb, RotateCcw, Volume2, VolumeX } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Lightbulb, RotateCcw, Volume2, VolumeX, Home, HelpCircle } from "lucide-react";
 import lumaMascot from "@/assets/luma-mascot.png";
 import { questionsByTopic, TopicType } from "@/data/questions";
 import {
@@ -31,6 +46,7 @@ const Lesson = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showHint, setShowHint] = useState(false);
   const [showTimeLimitDialog, setShowTimeLimitDialog] = useState(false);
+  const [showExitDialog, setShowExitDialog] = useState(false);
   const [timeLimitReason, setTimeLimitReason] = useState("");
   const [isNarrating, setIsNarrating] = useState(false);
   const sessionIndexRef = useRef<number>(-1);
@@ -216,44 +232,89 @@ const Lesson = () => {
   };
 
   return (
-    <div
-      className={`min-h-screen ${topicColors[topic]} p-6 transition-colors duration-500`}
-    >
-      <div className="max-w-4xl mx-auto">
-        {/* Progress header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate("/dashboard")}
-            >
-              ← Back
-            </Button>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => {
-                  if (isNarrating) {
-                    stopNarration();
-                  } else {
-                    speak(question.text);
-                  }
-                }}
-                className="w-10 h-10 rounded-full bg-card hover:bg-card/80 flex items-center justify-center shadow-soft transition-all hover:scale-110"
-                title={isNarrating ? "Stop narration" : "Read question"}
-              >
-                {isNarrating ? (
-                  <VolumeX className="w-5 h-5 text-foreground" />
-                ) : (
-                  <Volume2 className="w-5 h-5 text-foreground" />
-                )}
-              </button>
-            </div>
+    <TooltipProvider>
+      <div
+        className={`min-h-screen ${topicColors[topic]} p-6 transition-colors duration-500`}
+      >
+        <div className="max-w-4xl mx-auto">
+          {/* Breadcrumb Navigation - Nielsen #1: Visibility of system status */}
+          <div className="mb-4">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:text-primary">
+                      <Home className="w-4 h-4" />
+                      Home
+                    </button>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <button onClick={() => setShowExitDialog(true)} className="hover:text-primary">
+                      Dashboard
+                    </button>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{topicNames[topic]} - Quiz</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-          <ProgressBar value={progress} showLabel />
-        </div>
 
-        {/* Luma helper */}
+          {/* Progress header - Nielsen #1: Visibility of system status */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowExitDialog(true)}
+                  >
+                    ← Back
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Return to dashboard (your progress will be saved)</p>
+                </TooltipContent>
+              </Tooltip>
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => {
+                        if (isNarrating) {
+                          stopNarration();
+                        } else {
+                          speak(question.text);
+                        }
+                      }}
+                      className="w-10 h-10 rounded-full bg-card hover:bg-card/80 flex items-center justify-center shadow-soft transition-all hover:scale-110"
+                    >
+                      {isNarrating ? (
+                        <VolumeX className="w-5 h-5 text-foreground" />
+                      ) : (
+                        <Volume2 className="w-5 h-5 text-foreground" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isNarrating ? "Stop narration" : "Click to hear the question read aloud"}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+            <ProgressBar value={progress} showLabel />
+            <p className="text-sm text-center text-foreground/70 mt-2">
+              Question {currentQuestionIndex + 1} of {questions.length}
+            </p>
+          </div>
+
+        {/* Luma helper - Gestalt Proximity: Group helper message with mascot */}
         <div className="mb-8 animate-scale-in">
           <div className="bg-card rounded-2xl p-6 shadow-playful border-4 border-accent/30 flex items-center gap-4">
             <img
@@ -261,7 +322,7 @@ const Lesson = () => {
               alt="Luma"
               className="w-20 h-auto animate-bounce-gentle"
             />
-            <div>
+            <div className="flex-1">
               <p className="text-sm font-semibold text-muted-foreground mb-1">
                 {topicNames[topic]} - Question {currentQuestionIndex + 1} of{" "}
                 {questions.length}
@@ -272,6 +333,14 @@ const Lesson = () => {
                   : "Take your time and think carefully! You've got this! 🌟"}
               </p>
             </div>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-5 h-5 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>Select an answer, or use the Hint button if you need help!</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
@@ -314,32 +383,76 @@ const Lesson = () => {
           </div>
         </div>
 
-        {/* Helper buttons */}
+        {/* Helper buttons - Gestalt Similarity: Consistent button styling */}
         <div className="flex gap-4 justify-center">
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleHint}
-            disabled={showHint || selectedAnswer !== null}
-          >
-            <Lightbulb className="w-5 h-5" />
-            Hint
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handleRetry}
-            disabled={
-              selectedAnswer === null || selectedAnswer === question.correct
-            }
-          >
-            <RotateCcw className="w-5 h-5" />
-            Retry
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleHint}
+                disabled={showHint || selectedAnswer !== null}
+              >
+                <Lightbulb className="w-5 h-5" />
+                Hint
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                {showHint 
+                  ? "Hint already shown" 
+                  : selectedAnswer !== null 
+                    ? "Answer already selected" 
+                    : "Get a hint about the correct answer"}
+              </p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleRetry}
+                disabled={
+                  selectedAnswer === null || selectedAnswer === question.correct
+                }
+              >
+                <RotateCcw className="w-5 h-5" />
+                Retry
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                {selectedAnswer === null 
+                  ? "Select an answer first" 
+                  : selectedAnswer === question.correct 
+                    ? "Correct answer! No need to retry" 
+                    : "Try answering again"}
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
-      {/* Time limit dialog */}
+      {/* Exit Confirmation Dialog - Nielsen #3: User control and freedom */}
+      <AlertDialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave Quiz?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Your progress will be saved. You can continue from where you left off later.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continue Quiz</AlertDialogCancel>
+            <AlertDialogAction onClick={() => navigate("/dashboard")}>
+              Return to Dashboard
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Time limit dialog - Nielsen #9: Help users recognize errors */}
       <AlertDialog
         open={showTimeLimitDialog}
         onOpenChange={setShowTimeLimitDialog}
@@ -361,6 +474,7 @@ const Lesson = () => {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+    </TooltipProvider>
   );
 };
 

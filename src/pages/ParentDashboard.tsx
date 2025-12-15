@@ -14,6 +14,30 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { 
   BarChart3, 
   Clock, 
@@ -25,7 +49,10 @@ import {
   Map,
   Settings,
   LogOut,
-  Edit2
+  Edit2,
+  Home,
+  HelpCircle,
+  AlertCircle
 } from "lucide-react";
 import avatarSadra from "@/assets/avatar-sadra.png";
 import {
@@ -59,6 +86,7 @@ const ParentDashboard = () => {
   const [selectedBadge, setSelectedBadge] = useState<Badge | null>(null);
   const [showBadgeDialog, setShowBadgeDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [newProfileName, setNewProfileName] = useState("");
   const [settings, setSettings] = useState({
     dailyTimeLimit: 60,
@@ -67,6 +95,11 @@ const ParentDashboard = () => {
     ageAppropriateEnabled: true,
     allowedTopics: ["reading", "math", "culture", "geography"] as TopicType[],
   });
+  const [settingsErrors, setSettingsErrors] = useState<{
+    dailyTimeLimit?: string;
+    sessionTimeLimit?: string;
+    allowedTopics?: string;
+  }>({});
 
   useEffect(() => {
     const currentState = loadState();
@@ -124,10 +157,39 @@ const ParentDashboard = () => {
     return Math.round((totalLessons / (totalLessons + 2)) * 100);
   };
 
+  // Nielsen #5: Error prevention - Validate settings before saving
+  const validateSettings = (): boolean => {
+    const errors: typeof settingsErrors = {};
+    
+    if (settings.dailyTimeLimit < 15 || settings.dailyTimeLimit > 120) {
+      errors.dailyTimeLimit = "Daily time limit must be between 15 and 120 minutes";
+    }
+    
+    if (settings.sessionTimeLimit < 10 || settings.sessionTimeLimit > 60) {
+      errors.sessionTimeLimit = "Session time limit must be between 10 and 60 minutes";
+    }
+    
+    if (settings.sessionTimeLimit > settings.dailyTimeLimit) {
+      errors.sessionTimeLimit = "Session limit cannot exceed daily limit";
+    }
+    
+    if (settings.allowedTopics.length === 0) {
+      errors.allowedTopics = "At least one topic must be enabled";
+    }
+    
+    setSettingsErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSaveSettings = () => {
+    if (!validateSettings()) {
+      return; // Don't save if validation fails
+    }
+    
     if (selectedProfileId) {
       updateSafetySettings(selectedProfileId, settings);
       setShowSettingsDialog(false);
+      setSettingsErrors({});
       // Refresh state
       const updatedState = loadState();
       setState(updatedState);
@@ -178,34 +240,69 @@ const ParentDashboard = () => {
   }, [selectedProfileId, selectedProgress]);
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-4xl font-black text-foreground">Parent Dashboard</h1>
-              <p className="text-lg text-muted-foreground">Monitor your child's learning progress</p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowSettingsDialog(true)}
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Settings
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleLogout}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="w-4 h-4" />
-                Logout
-              </Button>
+    <TooltipProvider>
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Breadcrumb Navigation - Nielsen #1: Visibility of system status */}
+          <div className="mb-4">
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <button onClick={() => navigate("/")} className="flex items-center gap-1 hover:text-primary">
+                      <Home className="w-4 h-4" />
+                      Home
+                    </button>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Parent Dashboard</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-4xl font-black text-foreground">Parent Dashboard</h1>
+                <p className="text-lg text-muted-foreground">Monitor your child's learning progress</p>
+              </div>
+              <div className="flex gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowSettingsDialog(true)}
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Configure safety settings and time limits</p>
+                  </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowLogoutDialog(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Log out of parent dashboard</p>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
             </div>
           </div>
-        </div>
 
         {/* Profile selector */}
         {state.profiles.length > 1 && (
@@ -475,11 +572,22 @@ const ParentDashboard = () => {
                 max="120"
                 step="5"
                 value={settings.dailyTimeLimit}
-                onChange={(e) =>
-                  setSettings({ ...settings, dailyTimeLimit: parseInt(e.target.value) || 60 })
-                }
-                className="text-lg"
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 60;
+                  setSettings({ ...settings, dailyTimeLimit: value });
+                  // Clear error when user fixes it
+                  if (settingsErrors.dailyTimeLimit) {
+                    setSettingsErrors({ ...settingsErrors, dailyTimeLimit: undefined });
+                  }
+                }}
+                className={`text-lg ${settingsErrors.dailyTimeLimit ? "border-destructive" : ""}`}
               />
+              {settingsErrors.dailyTimeLimit && (
+                <div className="flex items-center gap-2 text-sm text-destructive">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{settingsErrors.dailyTimeLimit}</span>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 Recommended: 30-60 minutes per day
               </p>
@@ -495,11 +603,22 @@ const ParentDashboard = () => {
                 max="60"
                 step="5"
                 value={settings.sessionTimeLimit}
-                onChange={(e) =>
-                  setSettings({ ...settings, sessionTimeLimit: parseInt(e.target.value) || 30 })
-                }
-                className="text-lg"
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 30;
+                  setSettings({ ...settings, sessionTimeLimit: value });
+                  // Clear error when user fixes it
+                  if (settingsErrors.sessionTimeLimit) {
+                    setSettingsErrors({ ...settingsErrors, sessionTimeLimit: undefined });
+                  }
+                }}
+                className={`text-lg ${settingsErrors.sessionTimeLimit ? "border-destructive" : ""}`}
               />
+              {settingsErrors.sessionTimeLimit && (
+                <div className="flex items-center gap-2 text-sm text-destructive">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{settingsErrors.sessionTimeLimit}</span>
+                </div>
+              )}
               <p className="text-xs text-muted-foreground">
                 Maximum time per learning session
               </p>
@@ -543,6 +662,12 @@ const ParentDashboard = () => {
               <p className="text-xs text-muted-foreground mb-3">
                 Choose which subjects your child can access
               </p>
+              {settingsErrors.allowedTopics && (
+                <div className="flex items-center gap-2 text-sm text-destructive mb-2">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{settingsErrors.allowedTopics}</span>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-3">
                 {subjects.map((subject) => (
                   <div 
@@ -557,18 +682,16 @@ const ParentDashboard = () => {
                       id={`topic-${subject.topic}`}
                       checked={settings.allowedTopics.includes(subject.topic)}
                       onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSettings({
-                            ...settings,
-                            allowedTopics: [...settings.allowedTopics, subject.topic],
-                          });
-                        } else {
-                          setSettings({
-                            ...settings,
-                            allowedTopics: settings.allowedTopics.filter(
-                              (t) => t !== subject.topic
-                            ),
-                          });
+                        const newTopics = checked
+                          ? [...settings.allowedTopics, subject.topic]
+                          : settings.allowedTopics.filter((t) => t !== subject.topic);
+                        setSettings({
+                          ...settings,
+                          allowedTopics: newTopics,
+                        });
+                        // Clear error when user fixes it
+                        if (settingsErrors.allowedTopics && newTopics.length > 0) {
+                          setSettingsErrors({ ...settingsErrors, allowedTopics: undefined });
                         }
                       }}
                     />
@@ -672,8 +795,27 @@ const ParentDashboard = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Logout Confirmation Dialog - Nielsen #3: User control and freedom */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Logout from Parent Dashboard?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You will need to enter the password again to access the parent dashboard.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLogout}>
+              Logout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
     </div>
+    </TooltipProvider>
   );
 };
 
